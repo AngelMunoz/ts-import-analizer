@@ -2,10 +2,10 @@
   "name": "import-tree",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "bin": "index.js",
+  "main": "script.js",
+  "bin": "script.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node ./script.js"
   },
   "keywords": [],
   "author": "",
