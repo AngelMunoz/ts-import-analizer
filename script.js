@@ -1,8 +1,9 @@
-import { opendir, writeFile } from 'fs/promises';
+import { opendir, readlink, realpath, writeFile } from 'fs/promises';
 import { resolve } from 'path';
 import { parseFile } from '@swc/core';
 
 const isVerbose = process.argv.includes('--verbose');
+const includeTests = process.argv.includes('--include-tests');
 /**
  *
  * @param {string} filepath
@@ -10,7 +11,10 @@ const isVerbose = process.argv.includes('--verbose');
  */
 async function getFileWithDependencies(filepath) {
   if (isVerbose) console.log('Parsing: ', filepath);
-  const parsed = await parseFile(filepath, { syntax: 'typescript' });
+  const parsed = await parseFile(filepath, {
+    syntax: 'typescript',
+    decorators: true
+  });
   const imports = /** @type {import('@swc/core').ImportDeclaration[]} */ (
     /** @type {import('@swc/core').ModuleDeclaration[]} */ parsed.body
   ).filter(b => b.type === 'ImportDeclaration');
@@ -29,20 +33,23 @@ async function getFileWithDependencies(filepath) {
  */
 async function getDependencyTree(path) {
   const dir = await opendir(path);
-  let result = await dir.read();
   const directories = [];
   const files = [];
-  while (result) {
+  for await (const result of dir) {
     const dirpath = resolve(`${path}/${result.name}`);
     if (isVerbose) console.log('Checking: ', dirpath);
     if (result.isDirectory()) {
       if (isVerbose) console.log('Walking into directory');
       directories.push(await getDependencyTree(dirpath));
     } else {
+      const isTypescript = dirpath.includes('.ts');
+      if (!isTypescript) continue;
+      const isTest =
+        dirpath.includes('.spec.ts') || dirpath.includes('.test.ts');
+      if (!includeTests && isTest) continue;
       if (isVerbose) console.log('Getting Dependencies');
       files.push(await getFileWithDependencies(dirpath));
     }
-    result = await dir.read();
   }
   return { path, files, directories };
 }
