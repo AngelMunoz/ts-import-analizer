@@ -1,0 +1,41 @@
+{
+  "path": "C:\\Users\\scyth\\repos\\import-tree\\sample",
+  "files": [
+    {
+      "name": "C:\\Users\\scyth\\repos\\import-tree\\sample\\app.ts",
+      "dependencies": [
+        "../file",
+        "@angular/node"
+      ]
+    },
+    {
+      "name": "C:\\Users\\scyth\\repos\\import-tree\\sample\\sample.ts",
+      "dependencies": [
+        "./app",
+        "@angular/node"
+      ]
+    }
+  ],
+  "directories": [
+    {
+      "path": "C:\\Users\\scyth\\repos\\import-tree\\sample\\inner",
+      "files": [
+        {
+          "name": "C:\\Users\\scyth\\repos\\import-tree\\sample\\inner\\app-inner.ts",
+          "dependencies": [
+            "../file",
+            "@angular/node"
+          ]
+        },
+        {
+          "name": "C:\\Users\\scyth\\repos\\import-tree\\sample\\inner\\sample-inner.ts",
+          "dependencies": [
+            "./app",
+            "@angular/node"
+          ]
+        }
+      ],
+      "directories": []
+    }
+  ]
+}

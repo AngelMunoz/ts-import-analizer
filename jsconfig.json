@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "checkJs": true,
+        "moduleResolution": "node",
+        "module": "esnext",
+        "target": "esnext"
+    },
+    "include": [
+        "script.js",
+        "types.d.ts"
+    ]
+}
