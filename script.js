@@ -86,7 +86,7 @@ async function main(...args) {
 }
 
 main(...process.argv.slice(2)).catch(err => {
-  if (process.argv.includes('--verbose')) {
+  if (isVerbose) {
     console.error(err);
   } else {
     console.error('Failed to walk dependency tree:', err.message);
