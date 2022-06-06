@@ -1,15 +1,17 @@
 import { opendir, readlink, realpath, writeFile } from 'fs/promises';
-import { resolve } from 'path';
+import { resolve, sep } from 'path';
 import { parseFile } from '@swc/core';
 
 const isVerbose = process.argv.includes('--verbose');
 const includeTests = process.argv.includes('--include-tests');
+const useAbsolutePaths = process.argv.includes('--use-absolute-paths');
 /**
  *
  * @param {string} filepath
+ * @param {string} rootPath
  * @returns {Promise<import("./types").FileLeaf>}
  */
-async function getFileWithDependencies(filepath) {
+async function getFileWithDependencies(filepath, rootPath) {
   if (isVerbose) console.log('Parsing: ', filepath);
   const parsed = await parseFile(filepath, {
     syntax: 'typescript',
@@ -23,15 +25,20 @@ async function getFileWithDependencies(filepath) {
     console.log('Found:');
     console.dir(dependencies);
   }
-  return { name: filepath, dependencies };
+  const name = useAbsolutePaths ? filepath : filepath.replace(rootPath, '');
+  return {
+    name,
+    dependencies
+  };
 }
 
 /**
  *
  * @param {string} path
+ * @param {string} rootPath
  * @returns {Promise<import("./types").DirectoryTree>}
  */
-async function getDependencyTree(path) {
+async function getDependencyTree(path, rootPath) {
   const dir = await opendir(path);
   const directories = [];
   const files = [];
@@ -40,7 +47,7 @@ async function getDependencyTree(path) {
     if (isVerbose) console.log('Checking: ', dirpath);
     if (result.isDirectory()) {
       if (isVerbose) console.log('Walking into directory');
-      directories.push(await getDependencyTree(dirpath));
+      directories.push(await getDependencyTree(dirpath, rootPath));
     } else {
       const isTypescript = dirpath.includes('.ts');
       if (!isTypescript) continue;
@@ -48,10 +55,15 @@ async function getDependencyTree(path) {
         dirpath.includes('.spec.ts') || dirpath.includes('.test.ts');
       if (!includeTests && isTest) continue;
       if (isVerbose) console.log('Getting Dependencies');
-      files.push(await getFileWithDependencies(dirpath));
+      files.push(await getFileWithDependencies(dirpath, rootPath));
     }
   }
-  return { path, files, directories };
+  const fpath = useAbsolutePaths ? path : path.replace(rootPath, '');
+  return {
+    path: fpath,
+    files,
+    directories
+  };
 }
 
 /**
@@ -71,10 +83,11 @@ async function main(...args) {
   }
 
   path = resolve(path);
+  const rootPath = resolve(path, '../');
 
   if (isVerbose) console.log('Getting Dependencies');
 
-  const hierarchy = await getDependencyTree(path);
+  const hierarchy = await getDependencyTree(path, rootPath);
 
   if (isVerbose) {
     console.log('Formed Tree:');
